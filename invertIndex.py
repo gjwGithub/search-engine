@@ -22,7 +22,16 @@ ForwardIndex = {"document": "faculty.html", "tokens": tokenize.tokenize(plaintex
 print json.dumps(ForwardIndex, indent=4)
 
 InvertedIndex = {}
-
+for i, token in enumerate(ForwardIndex['tokens']):
+	if InvertedIndex.has_key(token):
+		InvertedIndex[token]['frequency'] += 1
+		InvertedIndex[token]['position'].append(i)
+	else:
+		InvertedIndex[token] = {}
+		InvertedIndex[token]['frequency'] = 1
+		InvertedIndex[token]['position'] = [i]
+InvertedIndex = json.dumps(InvertedIndex, indent = 4)
+print InvertedIndex
 # d = tokenize.computeWordFrequencies(tokenize.tokenize(plaintext))
 # od = OrderedDict(sorted(d.items(), key=lambda t: t[1], reverse=True))
 # print od
