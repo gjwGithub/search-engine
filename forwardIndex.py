@@ -32,13 +32,38 @@ def forwardIndex(filename):
 	ForwardIndex = {"document": filename, "tokens": tokenize.tokenize(plaintext)}
 	db.ForwardIndex.insert_one(ForwardIndex)
 
+def middle():
+	client = MongoClient()
+	db = client.SearchEngine
+	posts = db.ForwardIndex.find({}, {'_id': False})
+	for post in posts:
+		if db.Middle.find({'document': post['document']}, {'_id': False}).count() >= 1:
+			print "Find one middle" + post['document']
+			continue
+		words = {}
+		for i, token in enumerate(post['tokens']):
+			if words.has_key(token):
+				words[token]['frequency'] += 1
+				words[token]['position'].append(i)
+			else:
+				words[token] = {}
+				words[token]['frequency'] = 1
+				words[token]['position'] = [i]
+
+		InterIndex = {"document": post['document'], "words": words}
+		InterIndex['total'] = len(post['tokens'])	
+		db.Middle.insert_one(InterIndex)
+		pprint(InterIndex)
+
 def main(argv):
+	middle()
 	if len(argv) >= 1:
 		filename = argv[0]
 	else:
 		print "No file as input. Please add text file path to the command."
 		return
-	forwardIndex(filename)
+	#forwardIndex(filename)
+
 
 if __name__ == "__main__":
 	main(sys.argv[1:])
