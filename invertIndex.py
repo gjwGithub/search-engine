@@ -41,11 +41,11 @@ InvertedIndex = {}
 for word, value in InterIndex['words'].iteritems():
 	#print float(value['frequency']) / InterIndex['total']
 	if InterIndex.has_key(word):
-		posting = {"document": "faculty.html", "tf": float(value['frequency']) / InterIndex['total']}
+		posting = {"document": "faculty.html", "tf": value['frequency']}
 		InvertedIndex[word].append(posting)
 	else:
 		InvertedIndex[word] = []
-		posting = {"document": "faculty.html", "tf": float(value['frequency']) / InterIndex['total']}
+		posting = {"document": "faculty.html", "tf": value['frequency']}
 		InvertedIndex[word].append(posting)
 print json.dumps(InvertedIndex, indent=4)
 
