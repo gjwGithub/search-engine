@@ -19,19 +19,36 @@ plaintext = "\n".join(etree.XPath("//text()")(doc))
 # for token in tokens:
 # 	print token
 ForwardIndex = {"document": "faculty.html", "tokens": tokenize.tokenize(plaintext)}
-print json.dumps(ForwardIndex, indent=4)
+#print json.dumps(ForwardIndex, indent=4)
 
-InvertedIndex = {}
+words = {}
 for i, token in enumerate(ForwardIndex['tokens']):
-	if InvertedIndex.has_key(token):
-		InvertedIndex[token]['frequency'] += 1
-		InvertedIndex[token]['position'].append(i)
+	if words.has_key(token):
+		words[token]['frequency'] += 1
+		words[token]['position'].append(i)
 	else:
-		InvertedIndex[token] = {}
-		InvertedIndex[token]['frequency'] = 1
-		InvertedIndex[token]['position'] = [i]
-InvertedIndex = json.dumps(InvertedIndex, indent = 4)
-print InvertedIndex
+		words[token] = {}
+		words[token]['frequency'] = 1
+		words[token]['position'] = [i]
+
+InterIndex = {"document": "faculty.html", "words": words}
+InterIndex['total'] = len(ForwardIndex['tokens'])
+#InterIndex = json.dumps(InterIndex, indent = 4)
+print InterIndex
+
+#print InterIndex['document']
+InvertedIndex = {}
+for word, value in InterIndex['words'].iteritems():
+	#print float(value['frequency']) / InterIndex['total']
+	if InterIndex.has_key(word):
+		posting = {"document": "faculty.html", "tf": float(value['frequency']) / InterIndex['total']}
+		InvertedIndex[word].append(posting)
+	else:
+		InvertedIndex[word] = []
+		posting = {"document": "faculty.html", "tf": float(value['frequency']) / InterIndex['total']}
+		InvertedIndex[word].append(posting)
+print json.dumps(InvertedIndex, indent=4)
+
 # d = tokenize.computeWordFrequencies(tokenize.tokenize(plaintext))
 # od = OrderedDict(sorted(d.items(), key=lambda t: t[1], reverse=True))
 # print od
