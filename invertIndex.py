@@ -6,61 +6,48 @@ import tokenize as tokenize
 import nltk
 from collections import OrderedDict
 import json
+import sys
+import math
 
-#string = open("faculty.html").read()
-doc = html.document_fromstring(open("faculty.html").read())
-cleaner = Cleaner()
-cleaner.javascript = True
-cleaner.style = True   
-doc = cleaner.clean_html(doc)
-#print doc.text_content()
-plaintext = "\n".join(etree.XPath("//text()")(doc))
-# tokens = nltk.word_tokenize(plaintext)
-# for token in tokens:
-# 	print token
-ForwardIndex = {"document": "faculty.html", "tokens": tokenize.tokenize(plaintext)}
-#print json.dumps(ForwardIndex, indent=4)
+def invertedIndex(fromCollection, toCollection):
+	idfMap, N = calculateDF(fromCollection)
+	for word, df in idfMap.iteritems():
+		idfMap[word] = math.log10( float(N) / df)
+	InvertedIndex = {}
+	client = MongoClient()
+	db = client.SearchEngine
+	posts = db[fromCollection].find({}, {'_id': False})
+	if db[toCollection].find({}, {'_id': False}).count() >= 1:
+		db[toCollection].delete_many({})
+		print "Deleted all documents in " + toCollection
+	for post in posts:
+		for word, value in post['words'].iteritems():
+			if InvertedIndex.has_key(word):
+				itf = 1 + math.log10(value['frequency'])
+				InvertedIndex[word].append({"document": post['document'], "tf": itf, "td-idf": itf * idfMap[word]})
+			else:
+				itf = 1 + math.log10(value['frequency'])
+				InvertedIndex[word] = [{"document": post['document'], "tf": itf, "td-idf": itf * idfMap[word]}]
+	db[toCollection].insert_one(InvertedIndex)
 
-words = {}
-for i, token in enumerate(ForwardIndex['tokens']):
-	if words.has_key(token):
-		words[token]['frequency'] += 1
-		words[token]['position'].append(i)
-	else:
-		words[token] = {}
-		words[token]['frequency'] = 1
-		words[token]['position'] = [i]
+def calculateDF(fromCollection):
+	client = MongoClient()
+	db = client.SearchEngine
+	dFMap = {}
+	posts = db[fromCollection].find({}, {'_id': False})
+	for post in posts:
+		for word, value in post['words'].iteritems():
+			if dFMap.has_key(word):
+				dFMap[word] += 1
+			else:
+				dFMap[word] = 1
+	return (dFMap, db[fromCollection].find({}, {'_id': False}).count())
 
-InterIndex = {"document": "faculty.html", "words": words}
-InterIndex['total'] = len(ForwardIndex['tokens'])
-#InterIndex = json.dumps(InterIndex, indent = 4)
-print InterIndex
+def main(argv):
+	invertedIndex("Middle", "InvertedIndex")
 
-#print InterIndex['document']
-InvertedIndex = {}
-for word, value in InterIndex['words'].iteritems():
-	#print float(value['frequency']) / InterIndex['total']
-	if InterIndex.has_key(word):
-		posting = {"document": "faculty.html", "tf": value['frequency']}
-		InvertedIndex[word].append(posting)
-	else:
-		InvertedIndex[word] = []
-		posting = {"document": "faculty.html", "tf": value['frequency']}
-		InvertedIndex[word].append(posting)
-print json.dumps(InvertedIndex, indent=4)
-
-# d = tokenize.computeWordFrequencies(tokenize.tokenize(plaintext))
-# od = OrderedDict(sorted(d.items(), key=lambda t: t[1], reverse=True))
-# print od
-
-
-for elt in doc.iter('href'):
-	text=elt.text_content()
-	print text
-
-# client = MongoClient()
-# db = client.SearchEngine
-# table = db.ForwardIndex
-# #result = table.insert_one({"test document": {"hao": 1, "tang": 1}})
-# for document in table.find():
-# 	print document
+	#forwardIndex(filename)
+#print (json.dumps(invertedIndex("Middle", "InvertedIndex"), indent=4))
+if __name__ == "__main__":
+	main(sys.argv[1:])
+	#forwardIndex(filename);

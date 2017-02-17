@@ -53,7 +53,6 @@ def middle(fromCollection, toCollection):
 		InterIndex = {"document": post['document'], "words": words}
 		InterIndex['total'] = len(post['tokens'])	
 		db[toCollection].insert_one(InterIndex)
-		pprint(InterIndex)
 
 def main(argv):
 	middle("ForwardIndex", "Middle")
