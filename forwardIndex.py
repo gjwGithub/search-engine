@@ -32,12 +32,12 @@ def forwardIndex(filename):
 	ForwardIndex = {"document": filename, "tokens": tokenize.tokenize(plaintext)}
 	db.ForwardIndex.insert_one(ForwardIndex)
 
-def middle():
+def middle(fromCollection, toCollection):
 	client = MongoClient()
 	db = client.SearchEngine
-	posts = db.ForwardIndex.find({}, {'_id': False})
+	posts = db[fromCollection].find({}, {'_id': False})
 	for post in posts:
-		if db.Middle.find({'document': post['document']}, {'_id': False}).count() >= 1:
+		if db[toCollection].find({'document': post['document']}, {'_id': False}).count() >= 1:
 			print "Find one middle" + post['document']
 			continue
 		words = {}
@@ -52,11 +52,11 @@ def middle():
 
 		InterIndex = {"document": post['document'], "words": words}
 		InterIndex['total'] = len(post['tokens'])	
-		db.Middle.insert_one(InterIndex)
+		db[toCollection].insert_one(InterIndex)
 		pprint(InterIndex)
 
 def main(argv):
-	middle()
+	middle("ForwardIndex", "Middle")
 	if len(argv) >= 1:
 		filename = argv[0]
 	else:
