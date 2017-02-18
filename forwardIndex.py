@@ -24,9 +24,6 @@ def ProcessForwardIndex(table, plaintext, filename):
 
 def forwardIndex(filename):
 	global db
-	ForwardIndex = {"document": filename, "tokens": tokenize.tokenize(plaintext)}
-	db.ForwardIndex.insert_one(ForwardIndex)
-
 	ProcessForwardIndex(db.ForwardIndex, Content(filename), filename)
 	ProcessForwardIndex(db.BoldForwardIndex, Bold(filename), filename)
 	ProcessForwardIndex(db.TitleForwardIndex, Title(filename), filename)
