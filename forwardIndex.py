@@ -54,9 +54,11 @@ def Bold(filename):
 		if s.text != None:
 			boldStr += s.text + "\n"
 		else:
-			a = list(s.iter("a"))
-			for s2 in a:
-				boldStr += s2.text + "\n"
+			for s2 in s.iter():
+				if s2.tail != None:
+					boldStr += s2.tail + "\n"
+				if s2.text != None:
+					boldStr += s2.text + "\n"
 	return boldStr
 
 def Title(filename):
@@ -77,9 +79,11 @@ def H1(filename):
 		if h.text != None:
 			H1Str += h.text + "\n"
 		else:
-			span = list(h.iter("span"))
-			for s in span:
-				H1Str += s.text + "\n"
+			for h2 in h.iter():
+				if h2.text != None:
+					H1Str += h2.text + "\n"
+				if h2.tail != None:
+					H1Str += h2.tail + "\n"
 	return H1Str
 
 def H2(filename):
@@ -91,9 +95,11 @@ def H2(filename):
 		if h.text != None:
 			H2Str += h.text + "\n"
 		else:
-			span = list(h.iter("span"))
-			for s in span:
-				H2Str += s.text + "\n"
+			for h2 in h.iter():
+				if h2.text != None:
+					H2Str += h2.text + "\n"
+				if h2.tail != None:
+					H2Str += h2.tail + "\n"
 	return H2Str
 
 def H3(filename):
@@ -105,9 +111,11 @@ def H3(filename):
 		if h.text != None:
 			H3Str += h.text + "\n"
 		else:
-			span = list(h.iter("span"))
-			for s in span:
-				H3Str += s.text + "\n"
+			for h2 in h.iter():
+				if h2.text != None:
+					H3Str += h2.text + "\n"
+				if h2.tail != None:
+					H3Str += h2.tail + "\n"
 	return H3Str
 
 def middle(fromCollection, toCollection):
