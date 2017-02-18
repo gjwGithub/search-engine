@@ -13,14 +13,18 @@ def process_data(data):
 	tokens = data.lower()
 	tokens = re.sub(r'[-]', ' ', tokens) #replace '-' with ' '
 	tokens = re.sub(r'[^a-z0-9\s]', '', tokens) #remove punctuations
-	tokens = re.sub(r'\s.\s',' ', tokens)
 	tokens = re.sub("\s+", ' ', tokens) #remove extra space
 	tokens = tokens.lstrip() #remove spaces at the beginning
 	tokens = tokens.rstrip() #remove spaces at the end
 	tokens = tokens.split(" ")
 	if len(tokens) == 1 and '' in tokens:
-		tokens = []
-	return tokens
+		result = []
+	else:
+		result = []
+		for t in tokens:
+			if len(t) != 1:
+				result.append(t)
+	return result
 
 def computeWordFrequencies(tokens):
 	maps = {}

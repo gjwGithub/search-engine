@@ -11,30 +11,30 @@ import sys
 client = MongoClient()
 db = client.SearchEngine
 
-def ProcessForwardIndex(table, plaintext, filename):
-	posts = table.find({'document': filename}, {'_id': False})
+def forwardIndex(table, plaintext, filename):
+	posts = db[table].find({'document': filename}, {'_id': False})
 	if posts.count() >= 1:
 		print 'Already have!'
 		ForwardIndex = posts[0]
-		pprint(ForwardIndex)
+		#pprint(ForwardIndex)
 		return
 
 	ForwardIndex = {"document": filename, "tokens": tokenize.tokenize(plaintext)}
-	table.insert_one(ForwardIndex)
+	db[table].insert_one(ForwardIndex)
 
-def forwardIndex(filename):
+def ProcessForwardIndex(filename):
 	global db
-	ProcessForwardIndex(db.ForwardIndex, Content(filename), filename)
-	ProcessForwardIndex(db.BoldForwardIndex, Bold(filename), filename)
-	ProcessForwardIndex(db.TitleForwardIndex, Title(filename), filename)
+	forwardIndex("ForwardIndex", Content(filename), filename)
+	forwardIndex("BoldForwardIndex", Bold(filename), filename)
+	forwardIndex("TitleForwardIndex", Title(filename), filename)
 	h1 = H1(filename)
 	h2 = H2(filename)
 	h3 = H3(filename)
 	header = h1 + h2 + h3
-	ProcessForwardIndex(db.H1ForwardIndex, h1, filename)
-	ProcessForwardIndex(db.H2ForwardIndex, h2, filename)
-	ProcessForwardIndex(db.H3ForwardIndex, h3, filename)
-	ProcessForwardIndex(db.HeaderForwardIndex, header, filename)
+	forwardIndex("H1ForwardIndex", h1, filename)
+	forwardIndex("H2ForwardIndex", h2, filename)
+	forwardIndex("H3ForwardIndex", h3, filename)
+	forwardIndex("HeaderForwardIndex", header, filename)
 
 def Content(filename):
 	doc = html.document_fromstring(open(filename).read())
@@ -145,7 +145,7 @@ def main(argv):
 	else:
 		print "No file as input. Please add text file path to the command."
 		return
-	forwardIndex(filename)
+	ProcessForwardIndex(filename)
 
 if __name__ == "__main__":
 	main(sys.argv[1:])
