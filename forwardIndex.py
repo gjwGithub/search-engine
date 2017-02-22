@@ -20,24 +20,40 @@ def forwardIndex(table, plaintext, filename):
 		return
 
 	ForwardIndex = {"document": filename, "tokens": tokenize.tokenize(plaintext)}
+	#fs.put(str(ForwardIndex), filename=table)
+
 	db[table].insert_one(ForwardIndex)
 
 def ProcessForwardIndex(filename):
-	global db
-	forwardIndex("ForwardIndex", Content(filename), filename)
-	forwardIndex("BoldForwardIndex", Bold(filename), filename)
-	forwardIndex("TitleForwardIndex", Title(filename), filename)
-	h1 = H1(filename)
-	h2 = H2(filename)
-	h3 = H3(filename)
-	header = h1 + h2 + h3
-	forwardIndex("H1ForwardIndex", h1, filename)
-	forwardIndex("H2ForwardIndex", h2, filename)
-	forwardIndex("H3ForwardIndex", h3, filename)
-	forwardIndex("HeaderForwardIndex", header, filename)
+	fileContent = open(filename).read()
+	try:
+		if html.fromstring(fileContent).find('.//*') is not None: #html
+			forwardIndex("ForwardIndex", Content(fileContent), filename)
+			forwardIndex("BoldForwardIndex", Bold(fileContent), filename)
+			forwardIndex("TitleForwardIndex", Title(fileContent), filename)
+			h1 = H1(fileContent)
+			h2 = H2(fileContent)
+			h3 = H3(fileContent)
+			header = h1 + h2 + h3
+			forwardIndex("H1ForwardIndex", h1, filename)
+			forwardIndex("H2ForwardIndex", h2, filename)
+			forwardIndex("H3ForwardIndex", h3, filename)
+			forwardIndex("HeaderForwardIndex", header, filename)
+		else: #txt
+			forwardIndex("ForwardIndex", fileContent, filename)
+	# except pymongo.errors.DocumentTooLarge:
+	# 	f = open(error.txt, "a")
+	# 	f.write(filename + " DocumentTooLarge\n")
+	# 	f.close()
+	# 	print filename + " DocumentTooLarge"
+	except:
+		f = open("error.txt", "a")
+		f.write(filename + ": " + str(sys.exc_info()[1]) + "\n")
+		f.close()
+		print filename + ": " + str(sys.exc_info()[1]) + "\n"
 
-def Content(filename):
-	doc = html.document_fromstring(open(filename).read())
+def Content(content):
+	doc = html.document_fromstring(content)
 	cleaner = Cleaner()
 	cleaner.javascript = True
 	cleaner.style = True   
@@ -45,9 +61,8 @@ def Content(filename):
 	plaintext = "\n".join(etree.XPath("//text()")(doc))
 	return plaintext
 
-def Bold(filename):
-	content = open(filename).read()
-	page = etree.HTML(content.decode('utf-8'))
+def Bold(content):
+	page = etree.HTML(content)
 	strongs = page.xpath(u"//strong")
 	boldStr = str()
 	for s in strongs:
@@ -61,18 +76,17 @@ def Bold(filename):
 					boldStr += s2.text + "\n"
 	return boldStr
 
-def Title(filename):
-	content = open(filename).read()
-	page = etree.HTML(content.decode('utf-8'))
+def Title(content):
+	page = etree.HTML(content)
 	titles = page.xpath(u"//title")
 	TitleStr = str()
 	for s in titles:
-		TitleStr += s.text + "\n"
+		if s.text != None:
+			TitleStr += s.text + "\n"	
 	return TitleStr
 
-def H1(filename):
-	content = open(filename).read()
-	page = etree.HTML(content.decode('utf-8'))
+def H1(content):
+	page = etree.HTML(content)
 	H1s = page.xpath("//h1")
 	H1Str = str()
 	for h in H1s:
@@ -86,9 +100,8 @@ def H1(filename):
 					H1Str += h2.tail + "\n"
 	return H1Str
 
-def H2(filename):
-	content = open(filename).read()
-	page = etree.HTML(content.decode('utf-8'))
+def H2(content):
+	page = etree.HTML(content)
 	H2s = page.xpath("//h2")
 	H2Str = str()
 	for h in H2s:
@@ -102,9 +115,8 @@ def H2(filename):
 					H2Str += h2.tail + "\n"
 	return H2Str
 
-def H3(filename):
-	content = open(filename).read()
-	page = etree.HTML(content.decode('utf-8'))
+def H3(content):
+	page = etree.HTML(content)
 	H3s = page.xpath("//h3")
 	H3Str = str()
 	for h in H3s:

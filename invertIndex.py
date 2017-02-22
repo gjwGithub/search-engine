@@ -28,7 +28,8 @@ def invertedIndex(fromCollection, toCollection):
 			else:
 				itf = 1 + math.log10(value['frequency'])
 				InvertedIndex[word] = [{"document": post['document'], "tf": itf, "td-idf": itf * idfMap[word]}]
-	db[toCollection].insert_one(InvertedIndex)
+	for word, value in InvertedIndex.items():
+		db[toCollection].insert_one({word: value})
 
 def calculateDF(fromCollection):
 	client = MongoClient()
