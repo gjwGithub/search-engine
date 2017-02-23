@@ -1,12 +1,12 @@
-# import forwardIndex
-# import invertIndex
-# import json
-# import time
-# import threading
+import forwardIndex
+import invertIndex
+import json
+import time
+import threading
 
-# dirname = "WEBPAGES_RAW/"
-# f = open(dirname + "bookkeeping.json").read()
-# bookkeeping = json.loads(f)
+dirname = "WEBPAGES_RAW/"
+f = open(dirname + "bookkeeping.json").read()
+bookkeeping = json.loads(f)
 
 # def ForwardIndexThread(id):
 #     global bookkeeping
@@ -62,39 +62,34 @@
 # t3 = time.time()
 # print "Time: " + str(t3-t2)
 
-# print "invertIndex"
-# invertIndex.invertedIndex("ForwardIndexMiddle", "InvertedIndex")
-# invertIndex.invertedIndex("BoldForwardIndexMiddle", "BoldInvertedIndex")
-# invertIndex.invertedIndex("TitleForwardIndexMiddle", "TitleInvertedIndex")
-# invertIndex.invertedIndex("H1ForwardIndexMiddle", "H1InvertedIndex")
-# invertIndex.invertedIndex("H2ForwardIndexMiddle", "H2InvertedIndex")
-# invertIndex.invertedIndex("H3ForwardIndexMiddle", "H3InvertedIndex")
-# invertIndex.invertedIndex("HeaderForwardIndexMiddle", "HeaderInvertedIndex")
-# # th1 = threading.Thread(target=invertIndex.invertedIndex, args=("ForwardIndexMiddle", "InvertedIndex",))
-# # th2 = threading.Thread(target=invertIndex.invertedIndex, args=("BoldForwardIndexMiddle", "BoldInvertedIndex",))
-# # th3 = threading.Thread(target=invertIndex.invertedIndex, args=("TitleForwardIndexMiddle", "TitleInvertedIndex",))
-# # th4 = threading.Thread(target=invertIndex.invertedIndex, args=("H1ForwardIndexMiddle", "H1InvertedIndex",))
-# # th5 = threading.Thread(target=invertIndex.invertedIndex, args=("H2ForwardIndexMiddle", "H2InvertedIndex",))
-# # th6 = threading.Thread(target=invertIndex.invertedIndex, args=("H3ForwardIndexMiddle", "H3InvertedIndex",))
-# # th7 = threading.Thread(target=invertIndex.invertedIndex, args=("HeaderForwardIndexMiddle", "HeaderInvertedIndex",))
-# # th1.start()
-# # th2.start()
-# # th3.start()
-# # th4.start()
-# # th5.start()
-# # th6.start()
-# # th7.start()
-# # th1.join()
-# # th2.join()
-# # th3.join()
-# # th4.join()
-# # th5.join()
-# # th6.join()
-# # th7.join()
-# t4 = time.time()
-# print "Time: " + str(t4-t3)
-
-maps = {
-    '1': 'haha'
-}
-print maps.has_key('1')
+print "invertIndex"
+invertIndex.invertedIndex("ForwardIndexMiddle", "InvertedIndex")
+invertIndex.invertedIndex("BoldForwardIndexMiddle", "BoldInvertedIndex")
+invertIndex.invertedIndex("TitleForwardIndexMiddle", "TitleInvertedIndex")
+invertIndex.invertedIndex("H1ForwardIndexMiddle", "H1InvertedIndex")
+invertIndex.invertedIndex("H2ForwardIndexMiddle", "H2InvertedIndex")
+invertIndex.invertedIndex("H3ForwardIndexMiddle", "H3InvertedIndex")
+invertIndex.invertedIndex("HeaderForwardIndexMiddle", "HeaderInvertedIndex")
+# th1 = threading.Thread(target=invertIndex.invertedIndex, args=("ForwardIndexMiddle", "InvertedIndex",))
+# th2 = threading.Thread(target=invertIndex.invertedIndex, args=("BoldForwardIndexMiddle", "BoldInvertedIndex",))
+# th3 = threading.Thread(target=invertIndex.invertedIndex, args=("TitleForwardIndexMiddle", "TitleInvertedIndex",))
+# th4 = threading.Thread(target=invertIndex.invertedIndex, args=("H1ForwardIndexMiddle", "H1InvertedIndex",))
+# th5 = threading.Thread(target=invertIndex.invertedIndex, args=("H2ForwardIndexMiddle", "H2InvertedIndex",))
+# th6 = threading.Thread(target=invertIndex.invertedIndex, args=("H3ForwardIndexMiddle", "H3InvertedIndex",))
+# th7 = threading.Thread(target=invertIndex.invertedIndex, args=("HeaderForwardIndexMiddle", "HeaderInvertedIndex",))
+# th1.start()
+# th2.start()
+# th3.start()
+# th4.start()
+# th5.start()
+# th6.start()
+# th7.start()
+# th1.join()
+# th2.join()
+# th3.join()
+# th4.join()
+# th5.join()
+# th6.join()
+# th7.join()
+t4 = time.time()
+print "Time: " + str(t4-t3)

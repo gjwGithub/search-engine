@@ -24,10 +24,10 @@ def invertedIndex(fromCollection, toCollection):
 		for word, value in post['words'].iteritems():
 			if InvertedIndex.has_key(word):
 				itf = 1 + math.log10(value['frequency'])
-				InvertedIndex[word].append({"document": post['document'], "tf": itf, "td-idf": itf * idfMap[word]})
+				InvertedIndex[word].append({"document": post['document'], "tf": itf, "tf-idf": itf * idfMap[word]})
 			else:
 				itf = 1 + math.log10(value['frequency'])
-				InvertedIndex[word] = [{"document": post['document'], "tf": itf, "td-idf": itf * idfMap[word]}]
+				InvertedIndex[word] = [{"document": post['document'], "tf": itf, "tf-idf": itf * idfMap[word]}]
 	for word, value in InvertedIndex.items():
 		db[toCollection].insert_one({word: value})
 
