@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Search Results</title>
+  </head>
+  <body>
+    <p>Here are the results:</p>
+    <ul>
+      {% for url in urls %}
+      <a href="www.ics.uci.edu">{{ url }}</a>
+      {% endfor %}
+    </ul>
+    <p>THIS IS GONNA ROCK!</p>
+  </body>
+</html>

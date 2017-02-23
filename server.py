@@ -7,7 +7,7 @@ import sys
 import math
 
 import random
-from flask import Flask
+from flask import Flask, render_template, redirect
 from flask import request
 from flask import make_response
 
@@ -15,35 +15,29 @@ from flask import make_response
 app = Flask(__name__)
 print ('hahaha')
 
-@app.route('/', methods=['POST'])
-def index2():
-    req = request.get_json(silent=True, force=True)
-
-    print("Request:")
-    print(json.dumps(req, indent=4))
-
-    res = {"content": "shabi"}
-
-    res = json.dumps(res, indent=4)
-    print(res)
-    r = make_response(res)
-    r.headers['Content-Type'] = 'application/json'
-    return r
+@app.route('/search', methods=['POST'])
+def search():
+    query = request.form['query']
+    lists = ["www.ics.uci.edu", "www.ics.uci.edu/faculty.html"]
+    return render_template('search.html', urls = lists)
 
 @app.route('/', methods=['GET'])
 def index():
-    req = request.args.lists()
+    author = "Me"
+    name = "You"
+    return render_template('index.html', author=author, name=name)
+    # req = request.args.lists()
 
-    print("Request:" + str(req))
-    #print(json.dumps(req, indent=4))
+    # print("Request:" + str(req))
+    # #print(json.dumps(req, indent=4))
 
-    res = {"content": "shabi"}
+    # res = {"content": "shabi"}
 
-    res = json.dumps(res, indent=4)
-    print(res)
-    r = make_response(res)
-    r.headers['Content-Type'] = 'application/json'
-    return r
+    # res = json.dumps(res, indent=4)
+    # print(res)
+    # r = make_response(res)
+    # r.headers['Content-Type'] = 'application/json'
+    # return r
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
