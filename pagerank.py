@@ -1,5 +1,6 @@
 import numpy as np
 import time
+import generateGraph
 
 # print G.shape
 # print G
@@ -15,8 +16,10 @@ def pageRank_fast():
 	alpha = 0.1
 
 	#Loading data
-	P = np.genfromtxt("graph.txt",delimiter=None)
-	print "Loading graph.txt"
+	# print "Loading graph.txt"
+	# P = np.genfromtxt("graph.txt",delimiter=None) #P = np.array(graph())
+	print "Generating graph"
+	P = generateGraph.GenerateGraph()
 	print("--- %s seconds ---" % (time.time() - start_time))
 	n_states = P.shape[0]
 
@@ -102,3 +105,7 @@ def pageRank():
 
 if __name__ == '__main__':
 	pageRank_fast()
+
+	# P = np.ones((3, 3))
+	# P[2][2] = 0
+	# print P
