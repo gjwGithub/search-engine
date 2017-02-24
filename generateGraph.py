@@ -11,8 +11,10 @@ def InvertBookkeeping():
     inverted = dict()
     for key in bookkeeping:
         newkey = "http://" + bookkeeping[key]
-        if newkey[-1] != "/":
-            newkey += "/"
+        # if newkey[-1] != "/":
+        #     newkey += "/"
+        # if inverted.has_key(newkey):
+        #     print key + newkey
         inverted[newkey] = key
     f.close()
     f = open("InvertedBookKeeping.json", "w")
@@ -68,8 +70,17 @@ def GenerateGraph():
 
         outlinks = OutLinks(dirname + key, "http://" + bookkeeping[key])
         for link in outlinks:
-            if invertedBookkeeping.has_key(link):
-                graph[i][ID(invertedBookkeeping[link])] = 1.0
+            if link[-1] == "/":
+                if invertedBookkeeping.has_key(link):
+                    graph[i][ID(invertedBookkeeping[link])] = 1.0
+                if invertedBookkeeping.has_key(link[:-1]):
+                    graph[i][ID(invertedBookkeeping[link[:-1]])] = 1.0
+            else:
+
+                if invertedBookkeeping.has_key(link):
+                    graph[i][ID(invertedBookkeeping[link])] = 1.0
+                if invertedBookkeeping.has_key(link + "/"):
+                    graph[i][ID(invertedBookkeeping[link + "/"])] = 1.0
         del outlinks
 
         # for i, r in enumerate(row):
@@ -80,15 +91,15 @@ def GenerateGraph():
     #f.close()
     return graph
 
-#if __name__ == "__main__":
-    # dirname = "WEBPAGES_RAW/"
-    # f = open(dirname + "bookkeeping.json")
-    # bookkeeping = json.loads(f.read())
-    # key = "0/2"
-    # print bookkeeping[key]
-    # print OutLinks(dirname + key, "http://" + bookkeeping[key])
+# if __name__ == "__main__":
+#     dirname = "WEBPAGES_RAW/"
+#     f = open(dirname + "bookkeeping.json")
+#     bookkeeping = json.loads(f.read())
+#     key = "0/2"
+#     print bookkeeping[key]
+#     print OutLinks(dirname + key, "http://" + bookkeeping[key])
 
-    # absHref = urlparse.urljoin("www.ics.uci.edu/alumni/stayconnected/stayconnected/hall_of_fame/hall_of_fame/stayconnected/stayconnected/hall_of_fame/hall_of_fame/hall_of_fame/stayconnected/hall_of_fame/hall_of_fame/hall_of_fame/stayconnected/index.php", '/faculty/area/')
-    # print absHref
+#     absHref = urlparse.urljoin("www.ics.uci.edu/alumni/stayconnected/stayconnected/hall_of_fame/hall_of_fame/stayconnected/stayconnected/hall_of_fame/hall_of_fame/hall_of_fame/stayconnected/hall_of_fame/hall_of_fame/hall_of_fame/stayconnected/index.php", '/faculty/area/')
+#     print absHref
 
-    #GenerateGraph()
+#     GenerateGraph()
