@@ -1,15 +1,32 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Search Results</title>
-  </head>
-  <body>
-    <p>Here are the results:</p>
-    <ul>
-      {% for url in urls %}
-      <a href="www.ics.uci.edu">{{ url }}</a>
-      {% endfor %}
-    </ul>
-    <p>THIS IS GONNA ROCK!</p>
-  </body>
+
+<head>
+  <title>Search Results</title>
+  <link rel="stylesheet" href="/static/search.css" type="text/css" />
+</head>
+
+<body>
+  <form class="form-wrapper cf" action="/search" method="get">
+    <input type="text" name="query"></input>
+    <button type="submit">Search</button>
+  </form>
+  <p>About {{length}} results ({{time}} seconds)</p>
+  <ul>
+    {% for result in results %}
+    <li>
+      <h3><a href="{{'http://' + result['url'] }}">{{ result['title'] }}</a></h3>
+      <p style="color:lawngreen">{{ 'http://' + result['url'] }}</p>
+    </li>
+    <p>{{ result['abstract'] }}</p>
+    {% endfor %}
+  </ul>
+  <p>THIS IS GONNA ROCK!</p>
+  <p>
+    {% for pageLink in pageLinks %}
+    <a href="{{ pageLink['url'] }}">{{ pageLink['number'] }}</a>
+    {% endfor %}
+  </p>
+</body>
+
 </html>

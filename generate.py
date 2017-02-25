@@ -15,8 +15,8 @@ bookkeeping = json.loads(f)
 #         if fid % 8 == id:
 #             forwardIndex.ProcessForwardIndex(dirname + name)
 
-# t1 = time.time()
-# print "ProcessForwardIndex"
+t1 = time.time()
+print "ProcessForwardIndex"
 # # thread_list = []
 # # for i in range(0,8):
 # #     t = threading.Thread(target=ForwardIndexThread,args=(i,))
@@ -25,19 +25,19 @@ bookkeeping = json.loads(f)
 # # for t in thread_list:
 # #     t.join()
 
-# for name in bookkeeping:
-#     forwardIndex.ProcessForwardIndex(dirname + name)
-# t2 = time.time()
-# print "Time: " + str(t2-t1)
+for name in bookkeeping:
+    forwardIndex.ProcessForwardIndex(dirname + name)
+t2 = time.time()
+print "Time: " + str(t2-t1)
 
-# print "Middle"
-# forwardIndex.middle("ForwardIndex", "ForwardIndexMiddle")
-# forwardIndex.middle("BoldForwardIndex", "BoldForwardIndexMiddle")
-# forwardIndex.middle("TitleForwardIndex", "TitleForwardIndexMiddle")
-# forwardIndex.middle("H1ForwardIndex", "H1ForwardIndexMiddle")
-# forwardIndex.middle("H2ForwardIndex", "H2ForwardIndexMiddle")
-# forwardIndex.middle("H3ForwardIndex", "H3ForwardIndexMiddle")
-# forwardIndex.middle("HeaderForwardIndex", "HeaderForwardIndexMiddle")
+print "Middle"
+forwardIndex.middle("ForwardIndex", "ForwardIndexMiddle")
+forwardIndex.middle("BoldForwardIndex", "BoldForwardIndexMiddle")
+forwardIndex.middle("TitleForwardIndex", "TitleForwardIndexMiddle")
+forwardIndex.middle("H1ForwardIndex", "H1ForwardIndexMiddle")
+forwardIndex.middle("H2ForwardIndex", "H2ForwardIndexMiddle")
+forwardIndex.middle("H3ForwardIndex", "H3ForwardIndexMiddle")
+forwardIndex.middle("HeaderForwardIndex", "HeaderForwardIndexMiddle")
 # # th1 = threading.Thread(target=forwardIndex.middle, args=("ForwardIndex", "ForwardIndexMiddle",))
 # # th2 = threading.Thread(target=forwardIndex.middle, args=("BoldForwardIndex", "BoldForwardIndexMiddle",))
 # # th3 = threading.Thread(target=forwardIndex.middle, args=("TitleForwardIndex", "TitleForwardIndexMiddle",))
@@ -59,8 +59,8 @@ bookkeeping = json.loads(f)
 # # th5.join()
 # # th6.join()
 # # th7.join()
-# t3 = time.time()
-# print "Time: " + str(t3-t2)
+t3 = time.time()
+print "Time: " + str(t3-t2)
 
 print "invertIndex"
 invertIndex.invertedIndex("ForwardIndexMiddle", "InvertedIndex")

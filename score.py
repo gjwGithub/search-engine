@@ -17,7 +17,9 @@ db = client.SearchEngine
 dirname = "WEBPAGES_RAW/"
 f = open(dirname + "bookkeeping.json").read()
 bookkeeping = json.loads(f)
-#pprint(bookkeeping)
+
+f = open("DocumentItems.json").read()
+documentItems = json.loads(f)
 
 def getScore(query):
     start_time = time.time()
@@ -53,25 +55,43 @@ def getScore(query):
     #print score
 
     sorted_key_list = sorted(score, key=score.get, reverse = True)
+    return sorted_key_list
+
+def getDocuments(query, start, end):
+    start_time = time.time()
+    sorted_key_list = getScore(query)
     results = []
     for i, document in enumerate(sorted_key_list):
-        if i > K: break
+        if i >= end: break
         #print "Rank " + str(i) + ": " + document + ". Score: " + str(score[document])
         # results.append({"url": bookkeeping[document[13:]], "title": getTitle(document), "abstract": 'Murray Sherk Murray Sherk Univ. of Waterloo, School of Computer Science msherk@dragon.uwaterloo.ca Author, editor, or reviewer of: Self-adjusting $k$-ary search-trees [ D. Eppstein publications ] [ Citation database ] [ Authors ] Fano Experimental Web Server, D. Eppstein , School of Information & Co...'})
-        results.append(getDocumentItem(document))
-    return results, time.time() - start_time
+        if i >= start and i <end:
+            results.append(getDocumentItem(document))
+    return results, time.time() - start_time, len(sorted_key_list)
 
 def getDocumentItem(document):
-    post = db.DocumentItem.find({"document": document}, {'_id': False})
+    # post = db.DocumentItem.find({"document": document}, {'_id': False})
+    # url = bookkeeping[document[13:]]
+    # if post.count() == 0:
+    #     title = bookkeeping[document[13:]].split('/')[-1]
+    #     abstract = "Not available"
+    # else:
+    #     title = post[0]['title']
+    #     if title == "":
+    #         title = bookkeeping[document[13:]].split('/')[-1]
+    #     abstract = post[0]['abstract']
+    # return {"url": url, "title": title, "abstract": abstract}
+    
     url = bookkeeping[document[13:]]
-    if post.count() == 0:
+    if not documentItems.has_key(document):
         title = bookkeeping[document[13:]].split('/')[-1]
         abstract = "Not available"
     else:
-        title = post[0]['title']
+        documentItem = documentItems[document]
+        title = documentItem['title']
         if title == "":
             title = bookkeeping[document[13:]].split('/')[-1]
-        abstract = post[0]['abstract']
+        abstract = documentItem['abstract']
     return {"url": url, "title": title, "abstract": abstract}
 
 

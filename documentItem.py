@@ -63,6 +63,8 @@ db = client.SearchEngine
 dirname = "WEBPAGES_RAW/"
 f = open(dirname + "bookkeeping.json").read()
 bookkeeping = json.loads(f)
+out = open("DocumentItems.json", "w")
+result = dict()
 
 def ProcessDocumentItem(filename):
     fileContent = open(filename).read()
@@ -88,19 +90,22 @@ def ProcessDocumentItem(filename):
             else:
                 abstract = fileContent
         url = bookkeeping[filename[13:]]
-        abstract = abstract.decode("unicode_escape")
-        insert = {"document": filename, "title": title, "url": url, "abstract": abstract}
-        db.DocumentItem.insert_one(insert)
+        abstract = abstract.encode('utf-8')
+        #insert = {"document": filename, "title": title, "url": url, "abstract": abstract}
+        #db.DocumentItem.insert_one(insert)
+        result[filename] = {"title": title, "url": url, "abstract": abstract}
     except:
 		print filename + ": " + str(sys.exc_info()[1]) + "\n"
 
 if __name__ == "__main__":
-    # t1 = time.time()
-    # for name in bookkeeping:
-    #     ProcessDocumentItem(dirname + name)
-    # print "Time: " + str(time.time()-t1)
+    t1 = time.time()
+    for name in bookkeeping:
+        ProcessDocumentItem(dirname + name)
+    out.write(json.dumps(result, indent=4))
+    out.close()
+    print "Time: " + str(time.time()-t1)
 
-    ProcessDocumentItem("WEBPAGES_RAW/19/476")
+    #ProcessDocumentItem("WEBPAGES_RAW/19/476")
 
 
 
