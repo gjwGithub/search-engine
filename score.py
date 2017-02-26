@@ -21,6 +21,9 @@ bookkeeping = json.loads(f)
 f = open("DocumentItems.json").read()
 documentItems = json.loads(f)
 
+f = open("PageRank.json").read()
+pageRanks = json.loads(f)
+
 def getScore(query):
     start_time = time.time()
     words = tokenize.computeWordFrequencies(tokenize.tokenize(query))
@@ -54,18 +57,53 @@ def getScore(query):
     print("--- %s seconds ---" % (time.time() - start_time))
     #print score
 
-    sorted_key_list = sorted(score, key=score.get, reverse = True)
-    return sorted_key_list
+    # sorted_key_list = sorted(score, key=score.get, reverse = True)
+    # return sorted_key_list
+    #score = unify(score)
+    return score
+
+def unify(score):
+    min = sys.maxint
+    max = 0
+    for key in score:
+        if score[key] > max:
+            max = score[key]
+        if score[key] < min:
+            min = score[key]
+    delta = max - min
+    for key in score:
+        score[key] = (score[key] - min) / delta
+    return score
+
+def getPageRank(score):
+    pageRank = {}
+    for key in score:
+        pageRank[key] = float(pageRanks[key])
+    #pageRank = unify(pageRank)
+    return pageRank
+
+def combineScoreAndPageRank(score, pageRank):
+    result = {}
+    for key in score:
+        result[key] = 0.5 * score[key] + 0.5 * pageRank[key]
+    return result
 
 def getDocuments(query, start, end):
     start_time = time.time()
-    sorted_key_list = getScore(query)
+    score = getScore(query)
+    print "getScore" + str(time.time() - start_time)
+    pageRank = getPageRank(score)
+    print "getPageRank" + str(time.time() - start_time)
+    finalRank = combineScoreAndPageRank(score, pageRank)
+    print "combineScoreAndPageRank" + str(time.time() - start_time)
+    sorted_key_list = sorted(finalRank, key=finalRank.get, reverse = True)
+    print "sorted_key_list" + str(time.time() - start_time)
     results = []
     for i, document in enumerate(sorted_key_list):
         if i >= end: break
         #print "Rank " + str(i) + ": " + document + ". Score: " + str(score[document])
         # results.append({"url": bookkeeping[document[13:]], "title": getTitle(document), "abstract": 'Murray Sherk Murray Sherk Univ. of Waterloo, School of Computer Science msherk@dragon.uwaterloo.ca Author, editor, or reviewer of: Self-adjusting $k$-ary search-trees [ D. Eppstein publications ] [ Citation database ] [ Authors ] Fano Experimental Web Server, D. Eppstein , School of Information & Co...'})
-        if i >= start and i <end:
+        if i >= start and i < end:
             results.append(getDocumentItem(document))
     return results, time.time() - start_time, len(sorted_key_list)
 
@@ -110,7 +148,13 @@ def getTitle(document):
 
 def main(argv):
     if len(argv) >= 1:
-        pprint(getScore(argv[0]))
+        #pprint(getScore(argv[0]))
+        score = getScore(argv[0])
+        pageRank = getPageRank(score)
+        f = open("feature.txt", "w")
+        for key in score:
+            f.write(str(score[key]) + " " + str(pageRank[key]) + "\n")
+        f.close()
     else:
 		print "No query as input."
 		return

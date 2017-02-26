@@ -19,7 +19,7 @@ numOfPages = 10
 
 def PageLink(query, count):
     results = list()
-    for i in range(0, count / numOfPages + 1):
+    for i in range(0, int(math.ceil(count / numOfPages))):
         start = i * numOfPages
         results.append({"number": str(i + 1), "url": "http://localhost:5000/search?query={}&start={}".format(query, start)})
     return results
