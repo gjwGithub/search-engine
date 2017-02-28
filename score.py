@@ -24,35 +24,67 @@ documentItems = json.loads(f)
 f = open("PageRank.json").read()
 pageRanks = json.loads(f)
 
+weights = {
+    "InvertedIndex": 1.0,
+    "BoldInvertedIndex": 2.0,
+    "H3InvertedIndex": 2.0,
+    "H2InvertedIndex": 3.0,
+    "H1InvertedIndex": 4.0,
+    "TitleInvertedIndex": 5.0
+}
+# for key in weights:
+#     totalWeight += weights[key]
+
+vectorLengths = {
+    "InvertedIndex": "VectorLength",
+    "BoldInvertedIndex": "BoldVectorLength",
+    "H3InvertedIndex": "H3VectorLength",
+    "H2InvertedIndex": "H2VectorLength",
+    "H1InvertedIndex": "H1VectorLength",
+    "TitleInvertedIndex": "TitleVectorLength"
+}
+
+N = db.ForwardIndex.find({}).count()
+
 def getScore(query):
     start_time = time.time()
     words = tokenize.computeWordFrequencies(tokenize.tokenize(query))
     score = {}
-    magnitude = {}
-    queryLength = 0
-    for term in words:
-        #print ("{%s:{$exists:true}}, {'_id': false}" % (term))
-        posts = db.InvertedIndex.find({term:{"$exists":True}}, {'_id': False})
-        # print posts
-        #pprint(posts.count())
-        if posts.count() >= 1:
-            postList = posts[0][term]
-            N = db.ForwardIndex.find({}).count()
-            df = len(postList)
-            tfidf = (1 + math.log10(words[term])) * math.log10(float(N) / (df + 1))
-            queryLength += tfidf ** 2
-            for post in postList:
-                if score.has_key(post['document']):
-                    score[post['document']] += tfidf * post['tf-idf']
-                else:
-                    score[post['document']] = tfidf * post['tf-idf']
-    
-    VectorLength = {}
-    #for post in db.VectorLength.find({}, {'_id': False}):
-    VectorLength = db.VectorLength.find({}, {'_id': False})[0]
+    allOriginalScores = {}
+    # queryLength = 0
+    # for term in words:
+    #     #print ("{%s:{$exists:true}}, {'_id': false}" % (term))
+    #     posts = db.InvertedIndex.find({term:{"$exists":True}}, {'_id': False})
+    #     # print posts
+    #     #pprint(posts.count())
+    #     if posts.count() >= 1:
+    #         postList = posts[0][term]
+    #         N = db.ForwardIndex.find({}).count()
+    #         df = len(postList)
+    #         tfidf = (1 + math.log10(words[term])) * math.log10(float(N) / (df + 1))
+    #         queryLength += tfidf ** 2
+    #         for post in postList:
+    #             if score.has_key(post['document']):
+    #                 score[post['document']] += tfidf * post['tf-idf']
+    #             else:
+    #                 score[post['document']] = tfidf * post['tf-idf']
 
-    for key in score:
-        score[key] = score[key] / math.sqrt(VectorLength[key]) / math.sqrt(queryLength)
+
+    getOriginalScore("InvertedIndex", allOriginalScores, words)
+    getOriginalScore("BoldInvertedIndex", allOriginalScores, words)
+    getOriginalScore("TitleInvertedIndex", allOriginalScores, words)
+    getOriginalScore("H1InvertedIndex", allOriginalScores, words)
+    getOriginalScore("H2InvertedIndex", allOriginalScores, words)
+    getOriginalScore("H3InvertedIndex", allOriginalScores, words)
+
+    modifyScore(allOriginalScores, score)
+
+    # VectorLength = {}
+    # #for post in db.VectorLength.find({}, {'_id': False}):
+    # VectorLength = db.VectorLength.find({}, {'_id': False})[0]
+
+    # for key in score:
+    #     score[key] = score[key] / math.sqrt(VectorLength[key]) / math.sqrt(queryLength)
 
     print("--- %s seconds ---" % (time.time() - start_time))
     #print score
@@ -61,6 +93,45 @@ def getScore(query):
     # return sorted_key_list
     score = unify(score)
     return score
+
+def getOriginalScore(table, allOriginalScores, words):
+    queryLength = 0
+    for term in words:
+        posts = db[table].find({term:{"$exists":True}}, {'_id': False})
+        score = {}
+        if posts.count() >= 1:
+            postList = posts[0][term]
+            df = len(postList)
+            tfidf = (1 + math.log10(words[term])) * math.log10(float(N) / (df + 1))
+            queryLength += tfidf ** 2
+            for post in postList:
+                if allOriginalScores.has_key(post['document']):
+                    if allOriginalScores[post['document']].has_key(table):
+                        allOriginalScores[post['document']][table] += tfidf * post['tf-idf']
+                    else:
+                        allOriginalScores[post['document']][table] = tfidf * post['tf-idf']
+                else:
+                    temp = {}
+                    temp[table] = tfidf * post['tf-idf']
+                    allOriginalScores[post['document']] = temp
+                    # allOriginalScores[post['document']][table] = tfidf * post['tf-idf']
+    VectorLength = db[vectorLengths[table]].find({}, {'_id': False})[0]
+    for key in allOriginalScores:
+        if allOriginalScores[key].has_key(table):
+            allOriginalScores[key][table] = allOriginalScores[key][table] / math.sqrt(VectorLength[key]) / math.sqrt(queryLength)
+
+def modifyScore(allOriginalScores, score):
+    for document in allOriginalScores:
+        weightCount = 0
+        for table in weights:
+            if allOriginalScores[document].has_key(table):
+                weight = weights[table]
+                weightCount += weight
+                if score.has_key(document):
+                    score[document] += weight * allOriginalScores[document][table]
+                else:
+                    score[document] = weight * allOriginalScores[document][table]
+        score[document] /= weightCount
 
 def unify(score):
     min = sys.maxint
