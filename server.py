@@ -35,7 +35,7 @@ def search():
     end = start + numOfPages
     results, time, count = score.getDocuments(query, start, end)
     pageLinks = PageLink(query, count)
-    return render_template('search.html', results = results, time=time, length = count, pageLinks = pageLinks)
+    return render_template('search.html', query = query, results = results, time=time, length = count, pageLinks = pageLinks)
 
 @app.route('/', methods=['GET'])
 def index():
