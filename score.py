@@ -59,7 +59,7 @@ def getScore(query):
 
     # sorted_key_list = sorted(score, key=score.get, reverse = True)
     # return sorted_key_list
-    #score = unify(score)
+    score = unify(score)
     return score
 
 def unify(score):
@@ -79,13 +79,13 @@ def getPageRank(score):
     pageRank = {}
     for key in score:
         pageRank[key] = float(pageRanks[key])
-    #pageRank = unify(pageRank)
+    pageRank = unify(pageRank)
     return pageRank
 
 def combineScoreAndPageRank(score, pageRank):
     result = {}
     for key in score:
-        result[key] = 0.5 * score[key] + 0.5 * pageRank[key]
+        result[key] = 0.2 * score[key] + 0.8 * pageRank[key]
     return result
 
 def getDocuments(query, start, end):
@@ -96,7 +96,20 @@ def getDocuments(query, start, end):
     print "getPageRank" + str(time.time() - start_time)
     finalRank = combineScoreAndPageRank(score, pageRank)
     print "combineScoreAndPageRank" + str(time.time() - start_time)
+
     sorted_key_list = sorted(finalRank, key=finalRank.get, reverse = True)
+
+    domainPath = set()
+    sorted_key_list2 = list()
+    for key in sorted_key_list:
+        url = bookkeeping[key[13:]]
+        pos = url.find("?")
+        path = url[:pos]
+        if path not in domainPath:
+            domainPath.add(path)  
+            sorted_key_list2.append(key)
+    sorted_key_list = sorted_key_list2
+    
     print "sorted_key_list" + str(time.time() - start_time)
     results = []
     for i, document in enumerate(sorted_key_list):

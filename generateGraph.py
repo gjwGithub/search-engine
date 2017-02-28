@@ -3,8 +3,11 @@ from lxml import html,etree
 import urlparse
 import sys
 import numpy
+import time
 
 def InvertBookkeeping():
+    print "Invert Bookkeeping"
+    t = time.time()
     dirname = "WEBPAGES_RAW/"
     f = open(dirname + "bookkeeping.json")
     bookkeeping = json.loads(f.read())
@@ -20,6 +23,7 @@ def InvertBookkeeping():
     f = open("InvertedBookKeeping.json", "w")
     f.write(json.dumps(inverted, indent=4))
     f.close()
+    print "Time: " + str(time.time()-t)
 
 def OutLinks(filename, url):
     results = list()

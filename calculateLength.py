@@ -8,12 +8,11 @@ import json
 import time
 import math
 from pprint import pprint
-import sys
-
-client = MongoClient()
-db = client.SearchEngine    
+import sys    
     
 def calculateLength(fromCollection, toCollection):
+    client = MongoClient()
+    db = client.SearchEngine
     length = {}
     #start_time = time.time()
     for posting in db[fromCollection].find({}, {'_id': False}):
