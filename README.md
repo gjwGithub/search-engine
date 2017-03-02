@@ -5,5 +5,5 @@ The html source files are provided after we did the crawling on ics.uci.edu.
 
 The programming language is python and the databse is mongodb.
 
-We implemented forward indexing, inverted indexing, tf-idf scoring and pagerank algorithm. Also, we developed a simple web interface for searching based on the flask framework of python.
+We implemented forward indexing, inverted indexing, tf-idf scoring, cosine similartity, pagerank algorithm and RankSVM to learn the weights of cosine similarity and pagerank. Also, we developed a simple web interface for searching based on the flask framework of python.
 
