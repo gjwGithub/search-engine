@@ -9,6 +9,7 @@ import time
 import math
 from pprint import pprint
 import sys
+import config
 
 K = 100
 client = MongoClient()
@@ -71,11 +72,11 @@ def getScore(query):
 
 
     getOriginalScore("InvertedIndex", allOriginalScores, words)
-    getOriginalScore("BoldInvertedIndex", allOriginalScores, words)
-    getOriginalScore("TitleInvertedIndex", allOriginalScores, words)
-    getOriginalScore("H1InvertedIndex", allOriginalScores, words)
-    getOriginalScore("H2InvertedIndex", allOriginalScores, words)
-    getOriginalScore("H3InvertedIndex", allOriginalScores, words)
+    # getOriginalScore("BoldInvertedIndex", allOriginalScores, words)
+    # getOriginalScore("TitleInvertedIndex", allOriginalScores, words)
+    # getOriginalScore("H1InvertedIndex", allOriginalScores, words)
+    # getOriginalScore("H2InvertedIndex", allOriginalScores, words)
+    # getOriginalScore("H3InvertedIndex", allOriginalScores, words)
 
     modifyScore(allOriginalScores, score)
 
@@ -155,8 +156,12 @@ def getPageRank(score):
 
 def combineScoreAndPageRank(score, pageRank):
     result = {}
-    for key in score:
-        result[key] = 0.2 * score[key] + 0.8 * pageRank[key]
+    if not config.useMachineLearning:
+        for key in score:
+            result[key] = 0.2 * score[key] + 0.8 * pageRank[key]
+    else:
+        for key in score:
+            result[key] = config.weights[0] * score[key] + config.weights[1] * pageRank[key]
     return result
 
 def getDocuments(query, start, end):
@@ -185,8 +190,6 @@ def getDocuments(query, start, end):
     results = []
     for i, document in enumerate(sorted_key_list):
         if i >= end: break
-        #print "Rank " + str(i) + ": " + document + ". Score: " + str(score[document])
-        # results.append({"url": bookkeeping[document[13:]], "title": getTitle(document), "abstract": 'Murray Sherk Murray Sherk Univ. of Waterloo, School of Computer Science msherk@dragon.uwaterloo.ca Author, editor, or reviewer of: Self-adjusting $k$-ary search-trees [ D. Eppstein publications ] [ Citation database ] [ Authors ] Fano Experimental Web Server, D. Eppstein , School of Information & Co...'})
         if i >= start and i < end:
             results.append(getDocumentItem(document))
     return results, time.time() - start_time, len(sorted_key_list)
@@ -232,12 +235,30 @@ def getTitle(document):
 
 def main(argv):
     if len(argv) >= 1:
-        #pprint(getScore(argv[0]))
         score = getScore(argv[0])
+        import copy
+        score2 = copy.deepcopy(score)
+        score2 = unify(score2)
         pageRank = getPageRank(score)
-        f = open("feature.txt", "w")
-        for key in score:
-            f.write(str(score[key]) + " " + str(pageRank[key]) + "\n")
+        pageRank2 = copy.deepcopy(pageRank)
+        pageRank2 = unify(pageRank2)
+        finalRank = combineScoreAndPageRank(score2, pageRank2)
+        sorted_key_list = sorted(finalRank, key=finalRank.get, reverse = True)
+
+        domainPath = set()
+        sorted_key_list2 = list()
+        for item in sorted_key_list:
+            url = bookkeeping[item[13:]]
+            pos = url.find("?")
+            path = url[:pos]
+            if path not in domainPath:
+                domainPath.add(path)  
+                sorted_key_list2.append(item)
+        sorted_key_list = sorted_key_list2
+
+        f = open("xiaohui xie.txt", "w")
+        for key in sorted_key_list:
+            f.write(str(score[key]) + " " + str(pageRank[key]) + " " + bookkeeping[key[13:]] + "\n")
         f.close()
     else:
 		print "No query as input."
