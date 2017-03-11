@@ -10,6 +10,8 @@ import math
 from pprint import pprint
 import sys
 import config
+import urlparse
+import re
 
 K = 100
 client = MongoClient()
@@ -204,7 +206,7 @@ def getDocuments(query, start, end):
         url = bookkeeping[key[13:]]
         pos = url.find("?")
         path = url[:pos]
-        if path not in domainPath:
+        if path not in domainPath and is_valid("http://" + url):
             domainPath.add(path)  
             sorted_key_list2.append(key)
     sorted_key_list = sorted_key_list2
@@ -229,6 +231,11 @@ def getDocumentItem(document):
             title = bookkeeping[document[13:]].split('/')[-1]
         abstract = documentItem['abstract']
     return {"url": url, "title": title, "abstract": abstract}
+
+def is_valid(url):
+    if re.match(r"^.*/datasets/datasets/.*$", url): #duplicate path in url #https://support.archive-it.org/hc/en-us/articles/208332963-Modify-your-crawl-scope-with-a-Regular-Expression
+        return False
+    return True
 
 def main(argv):
     if len(argv) >= 1:
