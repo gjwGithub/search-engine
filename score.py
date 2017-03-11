@@ -25,6 +25,8 @@ documentItems = json.loads(f)
 f = open("PageRank.json").read()
 pageRanks = json.loads(f)
 
+tables = ["InvertedIndex", "BoldInvertedIndex", "H3InvertedIndex", "H2InvertedIndex", "H1InvertedIndex", "TitleInvertedIndex"]
+
 weights = {
     "InvertedIndex": 1.0,
     "BoldInvertedIndex": 2.0,
@@ -33,8 +35,6 @@ weights = {
     "H1InvertedIndex": 4.0,
     "TitleInvertedIndex": 5.0
 }
-# for key in weights:
-#     totalWeight += weights[key]
 
 vectorLengths = {
     "InvertedIndex": "VectorLength",
@@ -50,53 +50,28 @@ N = db.ForwardIndex.find({}).count()
 def getScore(query):
     start_time = time.time()
     words = tokenize.computeWordFrequencies(tokenize.tokenize(query))
-    score = {}
     allOriginalScores = {}
-    # queryLength = 0
-    # for term in words:
-    #     #print ("{%s:{$exists:true}}, {'_id': false}" % (term))
-    #     posts = db.InvertedIndex.find({term:{"$exists":True}}, {'_id': False})
-    #     # print posts
-    #     #pprint(posts.count())
-    #     if posts.count() >= 1:
-    #         postList = posts[0][term]
-    #         N = db.ForwardIndex.find({}).count()
-    #         df = len(postList)
-    #         tfidf = (1 + math.log10(words[term])) * math.log10(float(N) / (df + 1))
-    #         queryLength += tfidf ** 2
-    #         for post in postList:
-    #             if score.has_key(post['document']):
-    #                 score[post['document']] += tfidf * post['tf-idf']
-    #             else:
-    #                 score[post['document']] = tfidf * post['tf-idf']
 
+    tfidfs = getOriginalScore("InvertedIndex", allOriginalScores, words) #allOriginalScores is soft copied
+    getOriginalScore("BoldInvertedIndex", allOriginalScores, words)
+    getOriginalScore("TitleInvertedIndex", allOriginalScores, words)
+    getOriginalScore("H1InvertedIndex", allOriginalScores, words)
+    getOriginalScore("H2InvertedIndex", allOriginalScores, words)
+    getOriginalScore("H3InvertedIndex", allOriginalScores, words)
 
-    getOriginalScore("InvertedIndex", allOriginalScores, words)
-    # getOriginalScore("BoldInvertedIndex", allOriginalScores, words)
-    # getOriginalScore("TitleInvertedIndex", allOriginalScores, words)
-    # getOriginalScore("H1InvertedIndex", allOriginalScores, words)
-    # getOriginalScore("H2InvertedIndex", allOriginalScores, words)
-    # getOriginalScore("H3InvertedIndex", allOriginalScores, words)
+    #modifyScore(allOriginalScores, score)
+    score = {}
+    for key in allOriginalScores:
+        score[key] = allOriginalScores[key]["InvertedIndex"]
 
-    modifyScore(allOriginalScores, score)
-
-    # VectorLength = {}
-    # #for post in db.VectorLength.find({}, {'_id': False}):
-    # VectorLength = db.VectorLength.find({}, {'_id': False})[0]
-
-    # for key in score:
-    #     score[key] = score[key] / math.sqrt(VectorLength[key]) / math.sqrt(queryLength)
-
-    print("--- %s seconds ---" % (time.time() - start_time))
-    #print score
-
-    # sorted_key_list = sorted(score, key=score.get, reverse = True)
-    # return sorted_key_list
-    score = unify(score)
-    return score
+    score = rescale(score)
+    allOriginalScores = rescaleAllOriginalScores(allOriginalScores)
+    tfidfs = rescale(tfidfs)
+    return score, allOriginalScores, tfidfs
 
 def getOriginalScore(table, allOriginalScores, words):
     queryLength = 0
+    tfidfs = {}
     for term in words:
         posts = db[table].find({term:{"$exists":True}}, {'_id': False})
         score = {}
@@ -106,6 +81,7 @@ def getOriginalScore(table, allOriginalScores, words):
             tfidf = (1 + math.log10(words[term])) * math.log10(float(N) / (df + 1))
             queryLength += tfidf ** 2
             for post in postList:
+                tfidfs[post['document']] = post['tf-idf']
                 if allOriginalScores.has_key(post['document']):
                     if allOriginalScores[post['document']].has_key(table):
                         allOriginalScores[post['document']][table] += tfidf * post['tf-idf']
@@ -115,11 +91,13 @@ def getOriginalScore(table, allOriginalScores, words):
                     temp = {}
                     temp[table] = tfidf * post['tf-idf']
                     allOriginalScores[post['document']] = temp
-                    # allOriginalScores[post['document']][table] = tfidf * post['tf-idf']
+
     VectorLength = db[vectorLengths[table]].find({}, {'_id': False})[0]
     for key in allOriginalScores:
         if allOriginalScores[key].has_key(table):
             allOriginalScores[key][table] = allOriginalScores[key][table] / math.sqrt(VectorLength[key]) / math.sqrt(queryLength)
+
+    return tfidfs
 
 def modifyScore(allOriginalScores, score):
     for document in allOriginalScores:
@@ -134,7 +112,7 @@ def modifyScore(allOriginalScores, score):
                     score[document] = weight * allOriginalScores[document][table]
         score[document] /= weightCount
 
-def unify(score):
+def rescale(score):
     min = sys.maxint
     max = 0
     for key in score:
@@ -144,33 +122,78 @@ def unify(score):
             min = score[key]
     delta = max - min
     for key in score:
-        score[key] = (score[key] - min) / delta
+        if delta != 0:
+            score[key] = (score[key] - min) / delta
+        else:
+            score[key] = 0    
     return score
+
+def rescaleAllOriginalScores(allOriginalScores):
+    for table in tables:
+        min = sys.maxint
+        max = 0
+        for key in allOriginalScores:
+            if allOriginalScores[key].has_key(table) and allOriginalScores[key][table] > max:
+                max = allOriginalScores[key][table]
+            if allOriginalScores[key].has_key(table) and allOriginalScores[key][table] < min:
+                min = allOriginalScores[key][table]
+        delta = max - min
+        for key in allOriginalScores:
+            if allOriginalScores[key].has_key(table):
+                if delta != 0:
+                    allOriginalScores[key][table] = (allOriginalScores[key][table] - min) / delta
+                else:
+                    allOriginalScores[key][table] = 0
+    return allOriginalScores
 
 def getPageRank(score):
     pageRank = {}
     for key in score:
         pageRank[key] = float(pageRanks[key])
-    pageRank = unify(pageRank)
+    pageRank = rescale(pageRank)
     return pageRank
 
-def combineScoreAndPageRank(score, pageRank):
+def combineScoreAndPageRank(score, pageRank, allOriginalScores = None, tfidfs = None):
     result = {}
     if not config.useMachineLearning:
         for key in score:
             result[key] = 0.2 * score[key] + 0.8 * pageRank[key]
     else:
         for key in score:
-            result[key] = config.weights[0] * score[key] + config.weights[1] * pageRank[key]
+            if allOriginalScores[key].has_key("BoldInvertedIndex"):
+                bold = allOriginalScores[key]["BoldInvertedIndex"]
+            else:
+                bold = 0
+            if allOriginalScores[key].has_key("H3InvertedIndex"):
+                h3 = allOriginalScores[key]["H3InvertedIndex"]
+            else:
+                h3 = 0
+            if allOriginalScores[key].has_key("H2InvertedIndex"):
+                h2 = allOriginalScores[key]["H2InvertedIndex"]
+            else:
+                h2 = 0
+            if allOriginalScores[key].has_key("H1InvertedIndex"):
+                h1 = allOriginalScores[key]["H1InvertedIndex"]
+            else:
+                h1 = 0
+            if allOriginalScores[key].has_key("TitleInvertedIndex"):
+                title = allOriginalScores[key]["TitleInvertedIndex"]
+            else:
+                title = 0
+            result[key] = config.weights[0] * score[key] + config.weights[1] * pageRank[key] + config.weights[2] * tfidfs[key] \
+                + config.weights[3] * bold + config.weights[4] * title + config.weights[5] * h1 + config.weights[6] * h2 + config.weights[7] * h3
     return result
 
 def getDocuments(query, start, end):
     start_time = time.time()
-    score = getScore(query)
+    score, allOriginalScores, tfidfs = getScore(query)
     print "getScore" + str(time.time() - start_time)
     pageRank = getPageRank(score)
     print "getPageRank" + str(time.time() - start_time)
-    finalRank = combineScoreAndPageRank(score, pageRank)
+    if not config.useMachineLearning:
+        finalRank = combineScoreAndPageRank(score, pageRank)
+    else:
+        finalRank = combineScoreAndPageRank(score, pageRank, allOriginalScores, tfidfs)
     print "combineScoreAndPageRank" + str(time.time() - start_time)
 
     sorted_key_list = sorted(finalRank, key=finalRank.get, reverse = True)
@@ -194,19 +217,7 @@ def getDocuments(query, start, end):
             results.append(getDocumentItem(document))
     return results, time.time() - start_time, len(sorted_key_list)
 
-def getDocumentItem(document):
-    # post = db.DocumentItem.find({"document": document}, {'_id': False})
-    # url = bookkeeping[document[13:]]
-    # if post.count() == 0:
-    #     title = bookkeeping[document[13:]].split('/')[-1]
-    #     abstract = "Not available"
-    # else:
-    #     title = post[0]['title']
-    #     if title == "":
-    #         title = bookkeeping[document[13:]].split('/')[-1]
-    #     abstract = post[0]['abstract']
-    # return {"url": url, "title": title, "abstract": abstract}
-    
+def getDocumentItem(document):   
     url = bookkeeping[document[13:]]
     if not documentItems.has_key(document):
         title = bookkeeping[document[13:]].split('/')[-1]
@@ -219,29 +230,15 @@ def getDocumentItem(document):
         abstract = documentItem['abstract']
     return {"url": url, "title": title, "abstract": abstract}
 
-
-def getTitle(document):
-    post = db.TitleForwardIndex.find({"document": document}, {'_id': False})
-    if post.count() == 0:
-        return bookkeeping[document[13:]].split('/')[-1]
-    else:
-        title = ""
-        for p in post[0]['tokens']:
-            p = p.title()
-            title += p + " "
-        if title == "":
-            return bookkeeping[document[13:]].split('/')[-1]
-        return title
-
 def main(argv):
     if len(argv) >= 1:
-        score = getScore(argv[0])
+        score, allOriginalScore, tfidfs = getScore(argv[0])
         import copy
         score2 = copy.deepcopy(score)
-        score2 = unify(score2)
+        score2 = rescale(score2)
         pageRank = getPageRank(score)
         pageRank2 = copy.deepcopy(pageRank)
-        pageRank2 = unify(pageRank2)
+        pageRank2 = rescale(pageRank2)
         finalRank = combineScoreAndPageRank(score2, pageRank2)
         sorted_key_list = sorted(finalRank, key=finalRank.get, reverse = True)
 
@@ -256,9 +253,29 @@ def main(argv):
                 sorted_key_list2.append(item)
         sorted_key_list = sorted_key_list2
 
-        f = open("xiaohui xie.txt", "w")
+        f = open("acm.txt", "w")
         for key in sorted_key_list:
-            f.write(str(score[key]) + " " + str(pageRank[key]) + " " + bookkeeping[key[13:]] + "\n")
+            if allOriginalScore[key].has_key("BoldInvertedIndex"):
+                bold = allOriginalScore[key]["BoldInvertedIndex"]
+            else:
+                bold = 0
+            if allOriginalScore[key].has_key("H3InvertedIndex"):
+                h3 = allOriginalScore[key]["H3InvertedIndex"]
+            else:
+                h3 = 0
+            if allOriginalScore[key].has_key("H2InvertedIndex"):
+                h2 = allOriginalScore[key]["H2InvertedIndex"]
+            else:
+                h2 = 0
+            if allOriginalScore[key].has_key("H1InvertedIndex"):
+                h1 = allOriginalScore[key]["H1InvertedIndex"]
+            else:
+                h1 = 0
+            if allOriginalScore[key].has_key("TitleInvertedIndex"):
+                title = allOriginalScore[key]["TitleInvertedIndex"]
+            else:
+                title = 0
+            f.write(str(score[key]) + " " + str(pageRank[key]) + " " + str(tfidfs[key]) + " " + str(bold) + " " + str(title) + " " + str(h1) + " " + str(h2) + " " + str(h3) + " " + bookkeeping[key[13:]] + "\n")
         f.close()
     else:
 		print "No query as input."
